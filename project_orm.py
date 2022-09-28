@@ -1,5 +1,3 @@
-from email.policy import default
-from tkinter.messagebox import RETRY
 import uuid
 from sqlalchemy import create_engine
 from sqlalchemy import Column, String, Integer, Float, Date
