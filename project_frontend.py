@@ -84,33 +84,12 @@ if choice == "Create":
 
 	if submit:
 		try:
-			# entry = UserInput(Unique_Lead_Assignment_Number = id,
-			# 				Lead_Source_Name = src_name,
-			# 				Lead_Source_Details_if_any = src_detail,
-			# 				Suspect_Creation_date_by_Lead_Originator = sus_crt,
-			# 				Suspect_Creation_by_Lead_Originator_Name = sus_name,
-			# 				Customer_name = cust_name,
-			# 				Address_Line_1 = addr1,
-			# 				Address_Line_2 = addr2,
-			# 				City = city,
-			# 				State = state,
-			# 				Post_Code = postcode,
-			# 				Main_Phone = main_phone,
-			# 				Contact_Person_Name = cp_name,
-			# 				Contact_Person_Email = cp_email,
-			# 				Contact_Person_Designation =cp_pos,
-			# 				Contact_Person_Phone = cp_phone,
-			# 				Website = website,
-			# 				Physical_Channel = phy_channel,
-			# 				SSM_Number_Business_Registration_Number = biz_no,
-			# 				Competitors = competitors,
-			# 				Total_Potential_Revenue_per_Month = revenue,
-			# 				Industry = industry)
 			entry = UserInput(id,src_name,src_detail,sus_crt,sus_name,cust_name,addr1,
 							addr2,city,state,postcode,main_phone,cp_name,cp_email,cp_pos,
 							cp_phone,website,phy_channel,biz_no,competitors,revenue,industry)
 			add_data(entry)
 			st.success("New Lead ID {} added to database".format(id))
+			st.experimental_rerun()
 		except Exception as e:
 			st.error(f"some error occurred : {e}")
 
@@ -119,9 +98,7 @@ elif choice == "Read":
 	gd = GridOptionsBuilder.from_dataframe(df)
 	gd.configure_pagination(enabled=True)
 	# gd.configure_default_column(editable=True)
-
-	sel_mode = st.radio("Selection Type", options = ['single', 'multiple'])
-	gd.configure_selection(selection_mode=sel_mode, use_checkbox=True)
+	gd.configure_selection(selection_mode='single', use_checkbox=True)
 	gridoptions = gd.build()
 	grid_table = AgGrid(df, gridOptions=gridoptions,
 						update_mode=GridUpdateMode.SELECTION_CHANGED,
@@ -214,7 +191,7 @@ elif choice == "Read":
 				with bi4:
 					new_competitors = st.text_input("Competitors", value=competitors)
 				with bi5:
-					new_revenue = st.number_input("Monthly Total Potential Revenue", value=revenue)
+					new_revenue = st.number_input("Monthly Total Potential Revenue", value=revenue if revenue is not None else 0)
 				with bi6:
 					new_industry = st.text_input("Industry", value=industry)
 			edit = st.button("Edit info")
@@ -259,7 +236,8 @@ elif choice == "Import":
 		load_sel_row = grid_table["selected_rows"]
 		df_col = list(uploaded_df.columns)
 		df_col.insert(0,"")
-		st.sidebar.subheader("Dataset Available")
+		st.empty()
+		st.sidebar.subheader("Dataset Information Available")
 		load_src_name = st.sidebar.selectbox("Lead Source Name", df_col)
 		if load_src_name == "":
 			src_name_input = st.selectbox("Lead Source Name", ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"])
