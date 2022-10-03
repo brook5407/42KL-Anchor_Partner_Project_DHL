@@ -26,12 +26,12 @@ class UserInput(Base):
 	Address_Line_2 = Column(String(100))
 	City = Column(String(50))
 	State = Column(String(20))
-	Post_Code = Column(Integer)
-	Main_Phone = Column(Integer)
-	Contact_Person_Name = Column(Integer)
+	Post_Code = Column(String(5))
+	Main_Phone = Column(String(12))
+	Contact_Person_Name = Column(String(60))
 	Contact_Person_Email = Column(String(60))
 	Contact_Person_Designation = Column(String(50))
-	Contact_Person_Phone = Column(Integer)
+	Contact_Person_Phone = Column(String(12))
 	Website = Column(String(50))
 	Physical_Channel = Column(String(3))
 	SSM_Number_Business_Registration_Number = Column(String(12))
@@ -39,7 +39,9 @@ class UserInput(Base):
 	Total_Potential_Revenue_per_Month = Column(Float)
 	Industry = Column(String(20))
 	Suspect_Accepted_By = Column(String(50))
+	Suspect_Accepted_At = Column(Date)
 	Prospect_Accepted_By = Column(String(50))
+	Prospect_Accepted_At = Column(Date)
 	Source_Type = Column(String(4))
 	Lead_Score = Column(Integer())
 
@@ -73,18 +75,6 @@ class UserInput(Base):
 		self.Total_Potential_Revenue_per_Month = revenue
 		self.Industry = industry
 
-	def update(self):
-		mapped_values = {}
-		for item in Base.__dict__.iteritems():
-			field_name = item[0]
-			field_type = item[1]
-			is_column = isinstance(field_type, InstrumentedAttribute)
-			if is_column:
-				mapped_values[field_name] = getattr(self, field_name)
-
-		sess.query(Base).filter(Base.id == self.id).update(mapped_values)
-		sess.commit()
-
 if __name__ == "__main__":
 	engine = create_engine('sqlite:///dhl_db.sqlite3')
 	Base.metadata.create_all(engine)
@@ -99,16 +89,12 @@ def add_data(entry):
 		sess.close() #close the connection
 
 
-def add_all_data(uploaded_df, load_sel_row,load_src_name,src_name,load_src_detail,src_extra,load_sus_crt,sus_date,load_sus_name,sus_name,
+def add_all_data(load_sel_row,src_name,src_extra,sus_date,sus_name,
 					load_cust_name,load_addr1,load_addr2,load_city,load_state,load_postcode,load_main_phone,load_cp_name,
 					load_cp_email,load_cp_pos,load_cp_phone,load_website,load_phy_channel,load_biz_no,load_competitors,
 					load_revenue,load_industry):
-	for i in range(uploaded_df.shape[0]):
+	for i in range(len(load_sel_row)):
 					new_id = uuid.uuid4().hex
-					new_src_name = load_sel_row[i][load_src_name] if load_src_name != "" else src_name
-					new_src_detail = load_sel_row[i][load_src_detail] if load_src_detail != "" else src_extra
-					new_sus_crt = load_sel_row[i][load_sus_crt] if load_sus_crt != "" else sus_date
-					new_sus_name = load_sel_row[i][load_sus_name] if load_sus_name != "" else sus_name
 					new_cust_name = load_sel_row[i][load_cust_name] if load_cust_name != "" else None
 					new_addr1 = load_sel_row[i][load_addr1] if load_addr1 != "" else None
 					new_addr2 = load_sel_row[i][load_addr2] if load_addr2 != "" else None
@@ -126,7 +112,7 @@ def add_all_data(uploaded_df, load_sel_row,load_src_name,src_name,load_src_detai
 					new_competitors = load_sel_row[i][load_competitors] if load_competitors != "" else None
 					new_revenue = load_sel_row[i][load_revenue] if load_revenue != "" else None
 					new_industry = load_sel_row[i][load_industry] if load_industry != "" else None
-					new_entry = UserInput(new_id,new_src_name,new_src_detail,new_sus_crt,new_sus_name,new_cust_name,
+					new_entry = UserInput(new_id,src_name,src_extra,sus_date,sus_name,new_cust_name,
 								new_addr1,new_addr2,new_city,new_state,new_postcode,new_main_phone,new_cp_name,
 								new_cp_email,new_cp_pos,new_cp_phone,new_website,new_phy_channel,new_biz_no,
 								new_competitors,new_revenue,new_industry)
@@ -208,6 +194,19 @@ def    cleanup_names(df, name):
 
 def    cleanup_revenue(df, name):
 	if name != "":
+		if df[name].dtype == object and isinstance(df.iloc[0][name], str):
+			df[name] = df[name].str.replace('[a-z]','', regex=True)
+			df[name] = df[name].str.replace('[A-Z]','', regex=True)
+			df[name] = df[name].str.replace('[:-@]','', regex=True)
+			df[name] = df[name].str.replace('[!-,]','', regex=True)
+			df[name] = df[name].str.replace('/','', regex=True)
+			df[name] = df[name].str.replace(' +',' ', regex=True)
+			df[name] = df[name].str.strip()
+			df[name] = df[name].astype(float)
+			df[name] = df[name].round(2)
+
+def    cleanup_phone(df, name):
+	if name != "" and df[name].dtype == object:
 		df[name] = df[name].str.replace('[a-z]', '', regex=True)
 		df[name] = df[name].str.replace('[A-Z]', '', regex=True)
 		df[name] = df[name].str.replace('[:-@]', '', regex=True)
@@ -215,11 +214,12 @@ def    cleanup_revenue(df, name):
 		df[name] = df[name].str.replace(' +', ' ', regex=True)
 		df[name] = df[name].str.strip()
 
-def    cleanup_phone(df, name):
-	if name != "":
+def		cleanup_postcode(df, name):
+	if name != "" and df[name].dtype == object:
 		df[name] = df[name].str.replace('[a-z]', '', regex=True)
 		df[name] = df[name].str.replace('[A-Z]', '', regex=True)
 		df[name] = df[name].str.replace('[:-@]', '', regex=True)
 		df[name] = df[name].str.replace('[!-/]', '', regex=True)
 		df[name] = df[name].str.replace(' +', ' ', regex=True)
 		df[name] = df[name].str.strip()
+		df[name] = df[name].astype(int)

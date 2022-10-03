@@ -1,4 +1,3 @@
-from asyncore import write
 from project_orm import *
 from sqlalchemy import create_engine
 import streamlit as st
@@ -11,89 +10,98 @@ import uuid
 import scoring as sc
 
 
-st.title("Exploring DHL database")
+st.title("Exploring DHL Lead database")
 
-menu = ["Create", "Read", "Import", "Delete", "About"]
+menu = ["Dashboard","Query","Upload","Scoring", "About"]
 choice = st.sidebar.selectbox("Menu", menu)
 
-if choice == "Create":
-	st.subheader("Create New Record")
-	id = st.text_input("Unique Lead ID", value=uuid.uuid4().hex, disabled=True)
-	src1,src2 = st.columns(2)
-	with src1:
-		src_name = st.selectbox("Lead Source Name", ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"])
-	with src2:
-		if src_name == "Other":
-			src_detail = st.text_input("Lead Source Details, if any")
+if choice == "Dashboard":
+	open_add = st.button("Add New Record")
+	if open_add:
+		modal.open()
+	if modal.is_open():
+		with modal.container("Add New Record"):
+			with st.expander("Lead Information"):
+				id = st.text_input("Unique Lead ID", value=uuid.uuid4().hex, disabled=True)
+				src1,src2 = st.columns(2)
+				with src1:
+					src_name = st.selectbox("Lead Source Name", ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"])
+				with src2:
+					if src_name == "Other":
+						src_detail = st.text_input("Lead Source Details, if any")
+					else: src_detail = None
 
-	sus1,sus2 = st.columns(2)
-	with sus1:
-		sus_crt = st.date_input("Suspect Creation date by Lead Originator", value=None, disabled=True)
-	with sus2:
-		sus_name = st.text_input("Suspect Creation by Lead Originator Name")
-	
-	with st.expander("Customer information"):
-		cust_name = st.text_input("Customer name")
-		cust1,cust2 = st.columns(2)
-		with cust1:
-			addr1 = st.text_input("Address Line 1")
-		with cust2:
-			addr2 = st.text_input("Address Line 2")
-		cust3,cust4 = st.columns(2)
-		with cust3:
-			city = st.text_input("City")
-		with cust4:
-			state = st.selectbox("State", [None,"Johor", "Kedah", "Kelantan", "Kuala Lumpur", "Labuan", "Malacca",
-								   "Negeri Sembilan", "Pahang", "Penang", "Perak", "Perlis", "Putrajaya",
-								   "Sabah", "Sarawak", "Selangor", "Terengganu"])
-		cust5,cust6 = st.columns(2)
-		with cust5:
-			postcode = st.text_input("Post Code", max_chars=5)
-		with cust6:
-			main_phone = st.text_input("Main Phone#")
+				sus1,sus2 = st.columns(2)
+				with sus1:
+					sus_crt = st.date_input("Suspect Creation date by Lead Originator", value=None, disabled=True)
+				with sus2:
+					sus_name = st.text_input("Suspect Creation by Lead Originator Name")
+			
+			with st.expander("Customer information"):
+				cust_name = st.text_input("Customer name")
+				cust1,cust2 = st.columns(2)
+				with cust1:
+					addr1 = st.text_input("Address Line 1")
+				with cust2:
+					addr2 = st.text_input("Address Line 2")
+				cust3,cust4 = st.columns(2)
+				with cust3:
+					city = st.text_input("City")
+				with cust4:
+					state = st.selectbox("State", [None,"Johor", "Kedah", "Kelantan", "Kuala Lumpur", "Labuan", "Malacca",
+										"Negeri Sembilan", "Pahang", "Penang", "Perak", "Perlis", "Putrajaya",
+										"Sabah", "Sarawak", "Selangor", "Terengganu"])
+				cust5,cust6 = st.columns(2)
+				with cust5:
+					postcode = st.text_input("Post Code", max_chars=5)
+				with cust6:
+					main_phone = st.text_input("Main Phone#")
 
-	with st.expander("Contact Person Information"):
-		cp1,cp2 = st.columns(2)
-		with cp1:
-			cp_name = st.text_input("Contact Person Name")
-		with cp2:
-			cp_email = st.text_input("Contact Person Email")
-		cp3,cp4 = st.columns(2)
-		with cp3:
-			cp_pos = st.selectbox("Contact Person Designation", ["Director & above", "Mid-level manager", "Senior", "Entry Level"])
-		with cp4:
-			cp_phone = st.text_input("Contact Person Phone No.")
-	
-	with st.expander("Business Information"):
-		bi1,bi2,bi3 = st.columns(3)
-		with bi1:
-			website = st.text_input("Website")
-		with bi2:
-			phy_channel = st.selectbox("Physical Channel", ["B2B", "B2C"])
-		with bi3:
-			biz_no = st.text_input("SSM Number/Business Registration Number")
-		bi4,bi5,bi6 = st.columns(3)
-		with bi4:
-			competitors = st.text_input("Competitors")
-		with bi5:
-			revenue = st.number_input("Monthly Total Potential Revenue")
-		with bi6:
-			industry = st.text_input("Industry")
+			with st.expander("Contact Person Information"):
+				cp1,cp2 = st.columns(2)
+				with cp1:
+					cp_name = st.text_input("Contact Person Name")
+				with cp2:
+					cp_email = st.text_input("Contact Person Email")
+				cp3,cp4 = st.columns(2)
+				with cp3:
+					cp_pos = st.selectbox("Contact Person Designation", ["Director & above", "Mid-level manager", "Senior", "Entry Level"])
+				with cp4:
+					cp_phone = st.text_input("Contact Person Phone No.")
+			
+			with st.expander("Business Information"):
+				bi1,bi2,bi3 = st.columns(3)
+				with bi1:
+					website = st.text_input("Website")
+				with bi2:
+					phy_channel = st.selectbox("Physical Channel", ["B2B", "B2C"])
+				with bi3:
+					biz_no = st.text_input("SSM Number/Business Registration Number")
+				bi4,bi5,bi6 = st.columns(3)
+				with bi4:
+					competitors = st.text_input("Competitors")
+				with bi5:
+					revenue = st.number_input("Monthly Total Potential Revenue")
+				with bi6:
+					industry = st.text_input("Industry")
 
-	submit = st.button("Add")
+			submit = st.button("Add")
 
-	if submit:
-		try:
-			entry = UserInput(id,src_name,src_detail,sus_crt,sus_name,cust_name,addr1,
-							addr2,city,state,postcode,main_phone,cp_name,cp_email,cp_pos,
-							cp_phone,website,phy_channel,biz_no,competitors,revenue,industry)
-			add_data(entry)
-			st.success("New Lead ID {} added to database".format(id))
-			st.experimental_rerun()
-		except Exception as e:
-			st.error(f"some error occurred : {e}")
+			if submit:
+				try:
+					entry = UserInput(id,src_name,src_detail,sus_crt,sus_name,cust_name,addr1,
+									addr2,city,state,postcode,main_phone,cp_name,cp_email,cp_pos,
+									cp_phone,website,phy_channel,biz_no,competitors,revenue,industry)
+					add_data(entry)
+					st.success("New Lead ID {} added to database".format(id))
+					st.experimental_rerun()
+				except Exception as e:
+					st.error(f"some error occurred : {e}")
 
-elif choice == "Read":
+	lead_df = view_all_data()
+	st.dataframe(lead_df)
+
+elif choice == "Query":
 	df = view_all_data()
 	gd = GridOptionsBuilder.from_dataframe(df)
 	gd.configure_pagination(enabled=True)
@@ -137,10 +145,10 @@ elif choice == "Read":
 
 			src1,src2 = st.columns(2)
 			with src1:
-				sel_src = [None,"Current DB", "Exhibition", "Social media", "Blogs", "Website", "Referral", "Other"]
+				sel_src = [None,"Current DB","Exhibition","Social media","Blogs","Website","Referral","Other"]
 				new_src_name = st.selectbox("Lead Source Name", sel_src, index=sel_src.index(src_name))
 			with src2:
-				new_src_detail = st.text_input("Lead Source Details, if any", value = src_detail)
+				new_src_detail = st.text_input("Lead Source Details, if any", value = src_detail) if new_src_name == "Other" else None
 
 			with st.expander("Customer information"):
 				new_cust_name = st.text_input("Customer name", value=cust_name)
@@ -157,6 +165,7 @@ elif choice == "Read":
 					sel_state = [None,"Johor", "Kedah", "Kelantan", "Kuala Lumpur", "Labuan", "Malacca",
 											"Negeri Sembilan", "Pahang", "Penang", "Perak", "Perlis", "Putrajaya",
 											"Sabah", "Sarawak", "Selangor", "Terengganu"]
+					if state not in sel_state: state = None
 					new_state = st.selectbox("State", sel_state, index = sel_state.index(state))
 
 				cust5,cust6 = st.columns(2)
@@ -173,8 +182,7 @@ elif choice == "Read":
 					new_cp_email = st.text_input("Contact Person Email", value=cp_email)
 				cp3,cp4 = st.columns(2)
 				with cp3:
-					pos = [None,"Director & above", "Mid-level manager", "Senior", "Entry Level"]
-					new_cp_pos = st.selectbox("Contact Person Designation", pos, index=pos.index(cp_pos))
+					new_cp_pos = st.text_input("Contact Person Designation", value=cp_pos)
 				with cp4:
 					new_cp_phone = st.text_input("Contact Person Phone", value=cp_phone)
 
@@ -202,7 +210,6 @@ elif choice == "Read":
 									new_cp_phone,new_website,new_phy_channel,new_biz_no,new_competitors,
 									new_revenue,new_industry)
 					st.success("New Lead ID {} has been edited".format(id))
-					st.experimental_rerun()
 				except Exception as e:
 					st.error(f"some error occurred : {e}")
 	delete = st.button("Delete")
@@ -214,45 +221,16 @@ elif choice == "Read":
 		except Exception as e:
 				st.error(f"some error occurred : {e}")
 
-elif choice == "Import":
-	st.subheader("Import Data")
+elif choice == "Upload":
+	st.subheader("Upload Dataset")
 
 	uploaded_file = st.file_uploader("Choose a CSV file")
 	if uploaded_file is not None:
 		uploaded_df = pd.read_csv(uploaded_file)
-		# id_create(uploaded_df)
-		# cleanup_names(uploaded_df)
-		# set score uploaded_df
-		# uploaded_df["score"] = 0
-		# sc.setscore(uploaded_df)
-		uploaded_gd = GridOptionsBuilder.from_dataframe(uploaded_df)
-		uploaded_gd.configure_selection(selection_mode='multiple', use_checkbox=True,pre_selected_rows=create_indexlist(uploaded_df))
-		uploaded_gd.configure_pagination(enabled=True)
-		uploaded_gd.configure_default_column(editable=True, groupable=True)
-		gridoptions = uploaded_gd.build()
-		grid_table = AgGrid(uploaded_df, gridOptions=gridoptions,
-						update_mode=GridUpdateMode.SELECTION_CHANGED,
-						reload_data=True)
-		load_sel_row = grid_table["selected_rows"]
 		df_col = list(uploaded_df.columns)
 		df_col.insert(0,"")
 		st.empty()
 		st.sidebar.subheader("Dataset Information Available")
-		load_src_name = st.sidebar.selectbox("Lead Source Name", df_col)
-		if load_src_name == "":
-			src_name_input = st.selectbox("Lead Source Name", ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"])
-		load_src_detail = st.sidebar.selectbox("Lead Source if any", df_col)
-		if load_src_detail == "":
-			src_extra = st.text_input("Lead Source if any")
-		extra1,extra2 = st.columns(2)
-		load_sus_crt = st.sidebar.selectbox("Suspect Creation date by Lead Originator", df_col)
-		with extra1:
-			if load_sus_crt == "":
-				load_sus_crt_input = st.date_input("Suspect Creation date by Lead Originator",value=None,disabled=True)
-		load_sus_name = st.sidebar.selectbox("Suspect Creation by Lead Originator Name", df_col)
-		with extra2:
-			if load_sus_name == "":
-				load_sus_name_input = st.text_input("Suspect Creation by Lead Originator Name")
 		load_cust_name = st.sidebar.selectbox("Customer Name", df_col)
 		cleanup_names(uploaded_df, load_cust_name)
 		load_addr1 = st.sidebar.selectbox("Address Line 1", df_col)
@@ -260,11 +238,14 @@ elif choice == "Import":
 		load_city = st.sidebar.selectbox("City", df_col)
 		load_state = st.sidebar.selectbox("State", df_col)
 		load_postcode = st.sidebar.selectbox("Post Code", df_col)
+		cleanup_postcode(uploaded_df,load_postcode)
 		load_main_phone = st.sidebar.selectbox("Main Phone#", df_col)
+		cleanup_phone(uploaded_df,load_main_phone)
 		load_cp_name = st.sidebar.selectbox("Contact Person Name", df_col)
 		load_cp_email = st.sidebar.selectbox("Contact Person Email", df_col)
 		load_cp_pos = st.sidebar.selectbox("Contact Person Designation", df_col)
 		load_cp_phone = st.sidebar.selectbox("Contact Person Phone", df_col)
+		cleanup_phone(uploaded_df,load_cp_phone)
 		load_website = st.sidebar.selectbox("Website", df_col)
 		load_phy_channel = st.sidebar.selectbox("Physical Channel", df_col)
 		load_biz_no = st.sidebar.selectbox("SSM Number/Business Registration Number", df_col)
@@ -272,15 +253,42 @@ elif choice == "Import":
 		load_revenue = st.sidebar.selectbox("Monthly Total Potential Revenue", df_col)
 		cleanup_revenue(uploaded_df, load_revenue)
 		load_industry = st.sidebar.selectbox("Industry", df_col)
+		# id_create(uploaded_df)
+		# cleanup_names(uploaded_df)
+		# set score uploaded_df
+		# uploaded_df["score"] = 0
+		# sc.setscore(uploaded_df)
+		uploaded_gd = GridOptionsBuilder.from_dataframe(uploaded_df)
+		uploaded_gd.configure_selection(selection_mode='multiple',
+										use_checkbox=True,
+										pre_selected_rows=create_indexlist(uploaded_df))
+		uploaded_gd.configure_pagination(enabled=True)
+		uploaded_gd.configure_default_column(editable=True, groupable=True)
+		gridoptions = uploaded_gd.build()
+		grid_table = AgGrid(uploaded_df, gridOptions=gridoptions,
+						update_mode=GridUpdateMode.SELECTION_CHANGED,
+						reload_data=True)
+		load_sel_row = grid_table["selected_rows"]
+		sel_name = ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"]
+		src_name_input = st.selectbox("Lead Source Name", sel_name)
+		src_extra = st.text_input("Lead Source if any") if src_name_input == "Other" else None
+		extra1,extra2 = st.columns(2)
+		with extra1:
+			load_sus_crt_input = st.date_input("Suspect Creation date by Lead Originator",value=None,disabled=True)
+		with extra2:
+			load_sus_name_input = st.text_input("Suspect Creation by Lead Originator Name")
 		add_all = st.button("Add")
 		if add_all:
 			try:
-				add_all_data(uploaded_df, load_sel_row,load_src_name,src_name_input,load_src_detail,src_extra,load_sus_crt,load_sus_crt_input,
-					load_sus_name,load_sus_name_input,load_cust_name,load_addr1,load_addr2,load_city,load_state,load_postcode,load_main_phone,
-					load_cp_name,load_cp_email,load_cp_pos,load_cp_phone,load_website,load_phy_channel,load_biz_no,load_competitors,
+				add_all_data(load_sel_row,src_name_input,src_extra,load_sus_crt_input,load_sus_name_input,
+					load_cust_name,load_addr1,load_addr2,load_city,load_state,load_postcode,load_main_phone,load_cp_name,
+					load_cp_email,load_cp_pos,load_cp_phone,load_website,load_phy_channel,load_biz_no,load_competitors,
 					load_revenue,load_industry)
 				st.success("successful upload {} to database".format(uploaded_file))
 			except Exception as e:
 				st.error(f"some error occurred : {e}")
-		st.write(load_sel_row)
 
+elif choice == "Lead Score":
+	df = pd.DataFrame(view_all_data())
+	st.dataframe(df)
+	
