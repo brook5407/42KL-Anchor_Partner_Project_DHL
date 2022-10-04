@@ -288,7 +288,43 @@ elif choice == "Upload":
 			except Exception as e:
 				st.error(f"some error occurred : {e}")
 
-elif choice == "Lead Score":
+elif choice == "Scoring":
 	df = pd.DataFrame(view_all_data())
+	st.sidebar.subheader("Scoring Model")
+	weight = st.sidebar.slider("Choose the weight for lead scoring",max_value=10,value=1)
+	conditions = ["Revenue", "Physical Channel", "Competitors"]
+	options = st.multiselect("Condition",conditions)
+	if "Revenue" in options:
+		with st.sidebar.expander("Revenue Rules"):
+			average_revenue = st.number_input("Minimum Revenue required to achieve higher score", max_value=None,min_value=0)
+			max_revenue = st.number_input("max score",max_value=100,min_value=0, value=5, key="max score for revenue")
+			min_revenue = st.number_input("min score",max_value=100,min_value=0, value=1, key="min score for revenue")
+		sc.revenue(df,weight,max_revenue,min_revenue,average_revenue)
+
+	if "Physical Channel" in options:
+		with st.sidebar.expander("Physical Channel Rules"):
+			max_pc = st.number_input("score if B2C",max_value=100,min_value=0, value=5)
+			min_pc = st.number_input("score if B2B",max_value=100,min_value=0, value=1)
+		sc.channel(df,weight,max_pc,min_pc)
+
+	if "Competitors" in options:
+		with st.sidebar.expander("Competitors Rules"):
+			cmp_sel = ["FedEx","J&T Express", "Lalamove", "Ninjavan", "GDEX", "Skynet", "PosLaju", "ABX Express", "EasyParcel", "Pgeon", "CityLink"]
+			cmp_list = st.multiselect("Competitors to achieve higher score",cmp_sel)
+			max_cmp = st.number_input("max score",max_value=100,min_value=0, value=5, key="max score for competitor")
+			min_cmp = st.number_input("min score",max_value=100,min_value=0, value=1, key="min score for competitor")
+		sc.competitors(df,weight,cmp_list,max_cmp,min_cmp)
+
+	if "tmp" in df:
+		del df['tmp']
 	st.dataframe(df)
-	
+	submit_scoring = st.button("Save", key="submit score")
+
+	if submit_scoring:
+		for index, row in df.iterrows():
+			try:
+				update_scoring(row[0],row[-1])
+			except Exception as e:
+					st.error(f"some error occurred : {e}")
+		st.success("New Scoring Model have been updated")
+				

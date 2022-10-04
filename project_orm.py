@@ -119,8 +119,12 @@ def add_all_data(load_sel_row,src_name,src_extra,sus_date,sus_name,
 					add_data(new_entry)
 
 def view_all_data():
-	data = pd.read_sql('SELECT * FROM client_info', sess.bind)
-	return data
+	df = pd.read_sql('SELECT * FROM client_info', sess.bind)
+	return df
+
+def view_scoring_item():
+	df = pd.read_sql_query('SELECT Unique_Lead_Assignment_Number, Customer_name, Lead_Score FROM client_info', sess.bind)
+	return df
 
 def view_all_customer():
 	data = pd.read_sql_query('SELECT DISTINCT Customer_name FROM client_info', sess.bind)
@@ -138,29 +142,36 @@ def edit_customer_data(id, src_name, src_detail, cust_name,
 				addr1, addr2, city, state, postcode, main_phone, cp_name, cp_email,
 				cp_pos, cp_phone, website, phy_channel, biz_no, competitors, revenue,
 				industry):
-	update_record = sess.execute(update(UserInput).
-							where(UserInput.Unique_Lead_Assignment_Number == id).
-							values(Lead_Source_Name = src_name,
-							Lead_Source_Details_if_any = src_detail,
-							# Suspect_Creation_date_by_Lead_Originator = sus_crt,
-							# Suspect_Creation_by_Lead_Originator_Name = sus_name,
-							Customer_name = cust_name,
-							Address_Line_1 = addr1,
-							Address_Line_2 = addr2,
-							City = city,
-							State = state,
-							Post_Code = postcode,
-							Main_Phone = main_phone,
-							Contact_Person_Name = cp_name,
-							Contact_Person_Email = cp_email,
-							Contact_Person_Designation =cp_pos,
-							Contact_Person_Phone = cp_phone,
-							Website = website,
-							Physical_Channel = phy_channel,
-							SSM_Number_Business_Registration_Number = biz_no,
-							Competitors = competitors,
-							Total_Potential_Revenue_per_Month = revenue,
-							Industry = industry))
+	sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Lead_Source_Name = src_name,
+						Lead_Source_Details_if_any = src_detail,
+						Customer_name = cust_name,
+						Address_Line_1 = addr1,
+						Address_Line_2 = addr2,
+						City = city,
+						State = state,
+						Post_Code = postcode,
+						Main_Phone = main_phone,
+						Contact_Person_Name = cp_name,
+						Contact_Person_Email = cp_email,
+						Contact_Person_Designation =cp_pos,
+						Contact_Person_Phone = cp_phone,
+						Website = website,
+						Physical_Channel = phy_channel,
+						SSM_Number_Business_Registration_Number = biz_no,
+						Competitors = competitors,
+						Total_Potential_Revenue_per_Month = revenue,
+						Industry = industry))
+	try:
+		sess.commit()
+	except:
+		sess.rollback()
+	finally:
+		sess.close()
+
+def update_scoring(id, score):
+	sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Lead_Score = score))
 	try:
 		sess.commit()
 	except:
