@@ -22,8 +22,9 @@ def	channel(df,weight,max,min):
 def	revenue(df,weight,max,min,average):
 	data = 'Total_Potential_Revenue_per_Month'
 	score = 'Lead_Score'
+	df.loc[df[data].isnull(), ['tmp']] = 0
 	df.loc[df[data] > average, ['tmp']] = max
-	df.loc[df[data] < average, ['tmp']] = min
+	df.loc[df[data] <= average, ['tmp']] = min
 	df.loc[df[score].isnull(), [score]] = 0
 	df[score] = df[score] + (df['tmp'] * weight)
 
@@ -34,4 +35,14 @@ def	competitors(df,weight,list,max,min):
 	df.loc[df[data].notnull(), ['tmp']] = min
 	df.loc[df[data].isin(list), ['tmp']] = max
 	df.loc[df[score].isnull(), [score]] = 0
+	df[score] = df[score] + (df['tmp'] * weight)
+
+def	designation(df,weight,lv1,lv2,lv3,lv4):
+	data = 'Contact_Person_Designation'
+	score = 'Lead_Score'
+	df['tmp'] = 0
+	df.loc[df[data] == 'Director & above', ['tmp']] = lv1
+	df.loc[df[data] == 'Mid-level manager', ['tmp']] = lv2
+	df.loc[df[data] == 'Senior', ['tmp']] = lv3
+	df.loc[df[data] == 'Entry level', ['tmp']] = lv4
 	df[score] = df[score] + (df['tmp'] * weight)

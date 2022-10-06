@@ -1,19 +1,19 @@
 from project_orm import *
-from sqlalchemy import create_engine
 import streamlit as st
 from st_aggrid import AgGrid,GridUpdateMode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import streamlit_modal as modal
 import streamlit.components.v1 as components
+from streamlit_option_menu import option_menu
 import pandas as pd
-import uuid
+from uuid import uuid4
 import scoring as sc
 
-
-st.title("Exploring DHL Lead database")
-
-menu = ["Dashboard","Query","Upload","Scoring", "About"]
-choice = st.sidebar.selectbox("Menu", menu)
+with st.sidebar:
+	st.image("DHL.jpg",use_column_width=True)
+	menu = ["Dashboard","Query","Upload","Scoring", "Convert"]
+	icon = ['house', 'gear', 'cloud-upload', "list-task", "card-checklist"]
+	choice = option_menu("Lead Generation Enhancement", menu, icons=icon, menu_icon="cast", default_index=1)
 
 if choice == "Dashboard":
 	open_add = st.button("Add New Record")
@@ -22,7 +22,7 @@ if choice == "Dashboard":
 	if modal.is_open():
 		with modal.container("Add New Record"):
 			with st.expander("Lead Information"):
-				id = st.text_input("Unique Lead ID", value=uuid.uuid4().hex, disabled=True)
+				id = st.text_input("Unique Lead ID", value=uuid4().hex, disabled=True)
 				src1,src2 = st.columns(2)
 				with src1:
 					src_name = st.selectbox("Lead Source Name", ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"])
@@ -109,10 +109,7 @@ elif choice == "Query":
 	gd.configure_selection(selection_mode='single', use_checkbox=True)
 	gridoptions = gd.build()
 	grid_table = AgGrid(df, gridOptions=gridoptions,
-						update_mode=GridUpdateMode.SELECTION_CHANGED,
-						reload_data=True,
-						# height = 500,
-						# allow_unsafe_jscode=False
+						update_mode=GridUpdateMode.SELECTION_CHANGED
 						)
 	sel_row = grid_table["selected_rows"]
 	if sel_row:
@@ -146,6 +143,7 @@ elif choice == "Query":
 			src1,src2 = st.columns(2)
 			with src1:
 				sel_src = [None,"Current DB","Exhibition","Social media","Blogs","Website","Referral","Other"]
+				if src_name not in sel_src: sel_src.insert(0, src_name)
 				new_src_name = st.selectbox("Lead Source Name", sel_src, index=sel_src.index(src_name))
 			with src2:
 				new_src_detail = st.text_input("Lead Source Details, if any", value = src_detail) if new_src_name == "Other" else None
@@ -253,11 +251,6 @@ elif choice == "Upload":
 		load_revenue = st.sidebar.selectbox("Monthly Total Potential Revenue", df_col)
 		cleanup_revenue(uploaded_df, load_revenue)
 		load_industry = st.sidebar.selectbox("Industry", df_col)
-		# id_create(uploaded_df)
-		# cleanup_names(uploaded_df)
-		# set score uploaded_df
-		# uploaded_df["score"] = 0
-		# sc.setscore(uploaded_df)
 		uploaded_gd = GridOptionsBuilder.from_dataframe(uploaded_df)
 		uploaded_gd.configure_selection(selection_mode='multiple',
 										use_checkbox=True,
@@ -291,21 +284,24 @@ elif choice == "Upload":
 elif choice == "Scoring":
 	df = pd.DataFrame(view_all_data())
 	st.sidebar.subheader("Scoring Model")
-	weight = st.sidebar.slider("Choose the weight for lead scoring",max_value=10,value=1)
-	conditions = ["Revenue", "Physical Channel", "Competitors"]
-	options = st.multiselect("Condition",conditions)
+	conditions = ["Revenue", "Physical Channel", "Competitors", "Contact Person Designation"]
+	options = st.multiselect("Rules to score",conditions)
+	if options:
+		df['Lead_Score'] = 0
 	if "Revenue" in options:
 		with st.sidebar.expander("Revenue Rules"):
-			average_revenue = st.number_input("Minimum Revenue required to achieve higher score", max_value=None,min_value=0)
+			average_revenue = st.number_input("Minimum Revenue required to achieve higher score", value = 10000, max_value=None,min_value=0)
 			max_revenue = st.number_input("max score",max_value=100,min_value=0, value=5, key="max score for revenue")
 			min_revenue = st.number_input("min score",max_value=100,min_value=0, value=1, key="min score for revenue")
-		sc.revenue(df,weight,max_revenue,min_revenue,average_revenue)
+			weight_revenue = st.slider("Choose the weight for revenue scoring",max_value=1.0,value=1.0)
+		sc.revenue(df,weight_revenue,max_revenue,min_revenue,average_revenue)
 
 	if "Physical Channel" in options:
 		with st.sidebar.expander("Physical Channel Rules"):
 			max_pc = st.number_input("score if B2C",max_value=100,min_value=0, value=5)
 			min_pc = st.number_input("score if B2B",max_value=100,min_value=0, value=1)
-		sc.channel(df,weight,max_pc,min_pc)
+			weight_pc = st.slider("Choose the weight for weight scoring",max_value=1.0,value=1.0)
+		sc.channel(df,weight_pc,max_pc,min_pc)
 
 	if "Competitors" in options:
 		with st.sidebar.expander("Competitors Rules"):
@@ -313,11 +309,23 @@ elif choice == "Scoring":
 			cmp_list = st.multiselect("Competitors to achieve higher score",cmp_sel)
 			max_cmp = st.number_input("max score",max_value=100,min_value=0, value=5, key="max score for competitor")
 			min_cmp = st.number_input("min score",max_value=100,min_value=0, value=1, key="min score for competitor")
-		sc.competitors(df,weight,cmp_list,max_cmp,min_cmp)
+			weight_cmp = st.slider("Choose the weight for competitors scoring",max_value=1.0,value=1.0)			
+		sc.competitors(df,weight_cmp,cmp_list,max_cmp,min_cmp)
+
+	if "Contact Person Designation" in options:
+		with st.sidebar.expander("Contact Person Designation"):
+			lv1 = st.number_input("score for Director & above", max_value=100, value=10)
+			lv2 = st.number_input("score for Mid-level manager", max_value=100, value=8)
+			lv3 = st.number_input("score for Senior", max_value=100, value=8)
+			lv4 = st.number_input("score for Entry Level", max_value=100, value=8)
+			weight_dsig = st.slider("Choose the weight for competitors scoring",max_value=1.0,value=1.0)
+		sc.designation(df,weight_dsig,lv1,lv2,lv3,lv4)
 
 	if "tmp" in df:
 		del df['tmp']
-	st.dataframe(df)
+	df1 = df[['Unique_Lead_Assignment_Number','Customer_name','Lead_Score']]
+	# df1['Lead_Score'] = df1['Lead_Score'].astype(int)
+	st.dataframe(df1)
 	submit_scoring = st.button("Save", key="submit score")
 
 	if submit_scoring:
@@ -328,3 +336,44 @@ elif choice == "Scoring":
 					st.error(f"some error occurred : {e}")
 		st.success("New Scoring Model have been updated")
 				
+elif choice == "Convert":
+	tab1,tab2 = st.tabs(["Suspect Approve", "Prospect Approve"])
+	with tab1:
+		df_convert_sus = pd.DataFrame(view_all_data())
+		df_convert_sus = df_convert_sus[['Unique_Lead_Assignment_Number', 'Customer_name','Lead_Score']]
+		gd_sus = GridOptionsBuilder.from_dataframe(df_convert_sus)
+		gd_sus.configure_selection(selection_mode='multiple',
+										use_checkbox=True)
+		gd_sus.configure_pagination(enabled=True)
+		gd_sus.configure_grid_options(enableCellTextSelection=True)
+		gd_sus.configure_grid_options(ensureDomOrder=True)
+		gd_sus.configure_default_column(groupable=True)
+		gridoptions = gd_sus.build()
+		grid_table = AgGrid(df_convert_sus, gridOptions=gridoptions,
+						update_mode=GridUpdateMode.SELECTION_CHANGED)
+		sel_sus = grid_table["selected_rows"]
+		sus_input = st.text_input("Approved by:")
+		submit_sus = st.button("Approve")
+		if submit_sus and sel_sus:
+			if sus_input == "":
+				st.error("Please fill out the name for approve.")
+			else:
+				sus_id = sel_sus[0]["Unique_Lead_Assignment_Number"]
+				update_suspect_approve(sus_id, sus_input)
+				st.success("Selected receords have been Approved")
+
+	with tab2:
+		df_convert = pd.DataFrame(view_all_data())
+		df_convert = df_convert[['Unique_Lead_Assignment_Number', 'Customer_name','Lead_Score']]
+		uploaded_gd = GridOptionsBuilder.from_dataframe(df_convert)
+		uploaded_gd.configure_selection(selection_mode='multiple',
+										use_checkbox=True)
+		uploaded_gd.configure_pagination(enabled=True)
+		uploaded_gd.configure_default_column(editable=True, groupable=True)
+		gridoptions = uploaded_gd.build()
+		grid_table = AgGrid(df_convert, gridOptions=gridoptions,
+						update_mode=GridUpdateMode.SELECTION_CHANGED)
+		sel_sus = grid_table["selected_rows"]
+		for i in sel_sus:
+			i.pop('_selectedRowNodeInfo')
+			st.write(i)

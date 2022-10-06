@@ -1,4 +1,4 @@
-import uuid
+from uuid import uuid4
 from sqlalchemy import create_engine
 from sqlalchemy import Column, String, Integer, Float, Date
 from sqlalchemy import insert, update, select, delete
@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 import pandas as pd
+from datetime import date 
 
 Base = declarative_base()
 #Create the database
@@ -43,7 +44,7 @@ class UserInput(Base):
 	Prospect_Accepted_By = Column(String(50))
 	Prospect_Accepted_At = Column(Date)
 	Source_Type = Column(String(4))
-	Lead_Score = Column(Integer())
+	Lead_Score = Column(Float)
 
 	def __repr__(self):
 		return super().__repr__()
@@ -94,7 +95,7 @@ def add_all_data(load_sel_row,src_name,src_extra,sus_date,sus_name,
 					load_cp_email,load_cp_pos,load_cp_phone,load_website,load_phy_channel,load_biz_no,load_competitors,
 					load_revenue,load_industry):
 	for i in range(len(load_sel_row)):
-					new_id = uuid.uuid4().hex
+					new_id = uuid4().hex
 					new_cust_name = load_sel_row[i][load_cust_name] if load_cust_name != "" else None
 					new_addr1 = load_sel_row[i][load_addr1] if load_addr1 != "" else None
 					new_addr2 = load_sel_row[i][load_addr2] if load_addr2 != "" else None
@@ -133,10 +134,6 @@ def view_all_customer():
 def get_customer_record(name):
 	data = pd.read_sql_query('SELECT * FROM client_info where Customer_name="{}"'.format(name), sess.bind)
 	return data
-
-# def update_data(entry):
-# 	sess.execute(update(entry).where(entry.Unique_Lead_Assignment_Number = id)
-# 	sess.commit()
 
 def edit_customer_data(id, src_name, src_detail, cust_name,
 				addr1, addr2, city, state, postcode, main_phone, cp_name, cp_email,
@@ -178,6 +175,17 @@ def update_scoring(id, score):
 		sess.rollback()
 	finally:
 		sess.close()
+
+def update_suspect_approve(id, name):
+	sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Suspect_Accepted_By = name, Suspect_Accepted_At = date.today()))
+	try:
+		sess.commit()
+	except:
+		sess.rollback()
+	finally:
+		sess.close()
+
 
 def delete_data(id):
 	sess.execute(delete(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id))
