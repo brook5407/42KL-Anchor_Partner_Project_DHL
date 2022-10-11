@@ -94,25 +94,26 @@ def add_all_data(load_sel_row,src_name,src_extra,sus_date,sus_name,
 					load_cust_name,load_addr1,load_addr2,load_city,load_state,load_postcode,load_main_phone,load_cp_name,
 					load_cp_email,load_cp_pos,load_cp_phone,load_website,load_phy_channel,load_biz_no,load_competitors,
 					load_revenue,load_industry):
-	for i in range(len(load_sel_row)):
+	# for i in range(len(load_sel_row)):
+	for i in load_sel_row:
 					new_id = uuid4().hex
-					new_cust_name = load_sel_row[i][load_cust_name] if load_cust_name != "" else None
-					new_addr1 = load_sel_row[i][load_addr1] if load_addr1 != "" else None
-					new_addr2 = load_sel_row[i][load_addr2] if load_addr2 != "" else None
-					new_city = load_sel_row[i][load_city] if load_city != "" else None
-					new_state = load_sel_row[i][load_state] if load_state != "" else None
-					new_postcode = load_sel_row[i][load_postcode] if load_postcode != "" else None
-					new_main_phone = load_sel_row[i][load_main_phone] if load_main_phone != "" else None
-					new_cp_name = load_sel_row[i][load_cp_name] if load_cp_name != "" else None
-					new_cp_email = load_sel_row[i][load_cp_email] if load_cp_email != "" else None
-					new_cp_pos = load_sel_row[i][load_cp_pos] if load_cp_pos != "" else None
-					new_cp_phone = load_sel_row[i][load_cp_phone] if load_cp_phone != "" else None
-					new_website = load_sel_row[i][load_website] if load_website != "" else None
-					new_phy_channel = load_sel_row[i][load_phy_channel] if load_phy_channel != "" else None
-					new_biz_no = load_sel_row[i][load_biz_no] if load_biz_no != "" else None
-					new_competitors = load_sel_row[i][load_competitors] if load_competitors != "" else None
-					new_revenue = load_sel_row[i][load_revenue] if load_revenue != "" else None
-					new_industry = load_sel_row[i][load_industry] if load_industry != "" else None
+					new_cust_name = i[load_cust_name] if load_cust_name != "" else None
+					new_addr1 = i[load_addr1] if load_addr1 != "" else None
+					new_addr2 = i[load_addr2] if load_addr2 != "" else None
+					new_city = i[load_city] if load_city != "" else None
+					new_state = i[load_state] if load_state != "" else None
+					new_postcode = i[load_postcode] if load_postcode != "" else None
+					new_main_phone = i[load_main_phone] if load_main_phone != "" else None
+					new_cp_name = i[load_cp_name] if load_cp_name != "" else None
+					new_cp_email = i[load_cp_email] if load_cp_email != "" else None
+					new_cp_pos = i[load_cp_pos] if load_cp_pos != "" else None
+					new_cp_phone = i[load_cp_phone] if load_cp_phone != "" else None
+					new_website = i[load_website] if load_website != "" else None
+					new_phy_channel = i[load_phy_channel] if load_phy_channel != "" else None
+					new_biz_no = i[load_biz_no] if load_biz_no != "" else None
+					new_competitors = i[load_competitors] if load_competitors != "" else None
+					new_revenue = i[load_revenue] if load_revenue != "" else None
+					new_industry = i[load_industry] if load_industry != "" else None
 					new_entry = UserInput(new_id,src_name,src_extra,sus_date,sus_name,new_cust_name,
 								new_addr1,new_addr2,new_city,new_state,new_postcode,new_main_phone,new_cp_name,
 								new_cp_email,new_cp_pos,new_cp_phone,new_website,new_phy_channel,new_biz_no,
@@ -186,6 +187,15 @@ def update_suspect_approve(id, name):
 	finally:
 		sess.close()
 
+def update_prospect_approve(id, name):
+	sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Prospect_Accepted_By = name, Prospect_Accepted_At = date.today()))
+	try:
+		sess.commit()
+	except:
+		sess.rollback()
+	finally:
+		sess.close()
 
 def delete_data(id):
 	sess.execute(delete(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id))
