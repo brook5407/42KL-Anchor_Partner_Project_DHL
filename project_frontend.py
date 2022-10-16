@@ -7,7 +7,11 @@ import streamlit.components.v1 as components
 from streamlit_option_menu import option_menu
 import pandas as pd
 from uuid import uuid4
-import scoring as sc
+import project_scoring as sc
+import time
+from project_cleaning import *
+
+pd.options.display.float_format = "{:,.2f}".format
 
 with st.sidebar:
 	st.image("DHL.jpg",use_column_width=True)
@@ -22,14 +26,12 @@ if choice == "Dashboard":
 	if modal.is_open():
 		with modal.container("Add New Record"):
 			with st.expander("Lead Information"):
-				id = st.text_input("Unique Lead ID", value=uuid4().hex, disabled=True)
+				id = uuid4().hex
 				src1,src2 = st.columns(2)
 				with src1:
-					src_name = st.selectbox("Lead Source Name", ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"])
+					src_name = st.selectbox("Lead Source Name", ["Current DB", "E-commence Platform", "Exhibition", "Social media", "Blogs", "Website", "Referral", "Other"])
 				with src2:
-					if src_name == "Other":
-						src_detail = st.text_input("Lead Source Details, if any")
-					else: src_detail = None
+					src_detail = st.text_input("Lead Source Details, if any")
 
 				sus1,sus2 = st.columns(2)
 				with sus1:
@@ -38,7 +40,7 @@ if choice == "Dashboard":
 					sus_name = st.text_input("Suspect Creation by Lead Originator Name")
 			
 			with st.expander("Customer information"):
-				cust_name = st.text_input("Customer name")
+				cust_name = st.text_input("Customer name").upper()
 				cust1,cust2 = st.columns(2)
 				with cust1:
 					addr1 = st.text_input("Address Line 1")
@@ -48,9 +50,9 @@ if choice == "Dashboard":
 				with cust3:
 					city = st.text_input("City")
 				with cust4:
-					state = st.selectbox("State", [None,"Johor", "Kedah", "Kelantan", "Kuala Lumpur", "Labuan", "Malacca",
-										"Negeri Sembilan", "Pahang", "Penang", "Perak", "Perlis", "Putrajaya",
-										"Sabah", "Sarawak", "Selangor", "Terengganu"])
+					state = st.selectbox("State", [None,"JOHOR", "KEDAH", "KELANTAN", "KUALA LUMPUR", "LABUAN", "MALAKA",
+										"NEGERI SEMBILAN", "PAHANG", "PENANG", "PERAK","PERLIS","PUTRAJAYA","SABAH", "SARAWAK", 
+										"SELANGOR", "TERENGGANU"])
 				cust5,cust6 = st.columns(2)
 				with cust5:
 					postcode = st.text_input("Post Code", max_chars=5)
@@ -94,14 +96,22 @@ if choice == "Dashboard":
 									cp_phone,website,phy_channel,biz_no,competitors,revenue,industry)
 					add_data(entry)
 					st.success("New Lead ID {} added to database".format(id))
+					time.sleep(2)
 					st.experimental_rerun()
 				except Exception as e:
 					st.error(f"some error occurred : {e}")
 
 	lead_df = view_all_data()
-	st.dataframe(lead_df)
+	st.dataframe(lead_df.style.format({'Total_Potential_Revenue_per_Month':'{:.2f}', 'Lead_Score':'{:.2f}'}))
 
 elif choice == "Query":
+	clean_dup = st.button("Deduplicate data")
+	if clean_dup:
+		try:
+			deduplicate_data(view_all_data())
+			st.experimental_rerun()
+		except Exception as e:
+			st.error(f"some error occurred : {e}")
 	df = view_all_data()
 	gd = GridOptionsBuilder.from_dataframe(df)
 	gd.configure_pagination(enabled=True)
@@ -142,7 +152,7 @@ elif choice == "Query":
 
 			src1,src2 = st.columns(2)
 			with src1:
-				sel_src = [None,"Current DB","Exhibition","Social media","Blogs","Website","Referral","Other"]
+				sel_src = [None,"Current DB","Ecommence Platform","Exhibition","Social media","Blogs","Website","Referral","Other"]
 				if src_name not in sel_src: sel_src.insert(0, src_name)
 				new_src_name = st.selectbox("Lead Source Name", sel_src, index=sel_src.index(src_name))
 			with src2:
@@ -227,7 +237,6 @@ elif choice == "Upload":
 		uploaded_df = pd.read_csv(uploaded_file)
 		df_col = list(uploaded_df.columns)
 		df_col.insert(0,"")
-		st.empty()
 		st.sidebar.subheader("Dataset Information Available")
 		load_cust_name = st.sidebar.selectbox("Customer Name", df_col)
 		cleanup_names(uploaded_df, load_cust_name)
@@ -235,19 +244,23 @@ elif choice == "Upload":
 		load_addr2 = st.sidebar.selectbox("Address Line 2", df_col)
 		load_city = st.sidebar.selectbox("City", df_col)
 		load_state = st.sidebar.selectbox("State", df_col)
+		remapping_state(uploaded_df,load_state)
 		load_postcode = st.sidebar.selectbox("Post Code", df_col)
 		cleanup_postcode(uploaded_df,load_postcode)
 		load_main_phone = st.sidebar.selectbox("Main Phone#", df_col)
 		cleanup_phone(uploaded_df,load_main_phone)
 		load_cp_name = st.sidebar.selectbox("Contact Person Name", df_col)
 		load_cp_email = st.sidebar.selectbox("Contact Person Email", df_col)
+		cleanup_email(uploaded_df,load_cp_email)
 		load_cp_pos = st.sidebar.selectbox("Contact Person Designation", df_col)
 		load_cp_phone = st.sidebar.selectbox("Contact Person Phone", df_col)
 		cleanup_phone(uploaded_df,load_cp_phone)
 		load_website = st.sidebar.selectbox("Website", df_col)
+		cleanup_website(uploaded_df, load_website)
 		load_phy_channel = st.sidebar.selectbox("Physical Channel", df_col)
 		load_biz_no = st.sidebar.selectbox("SSM Number/Business Registration Number", df_col)
 		load_competitors = st.sidebar.selectbox("Competitiors", df_col)
+		remapping_competitors(uploaded_df,load_competitors)
 		load_revenue = st.sidebar.selectbox("Monthly Total Potential Revenue", df_col)
 		cleanup_revenue(uploaded_df, load_revenue)
 		load_industry = st.sidebar.selectbox("Industry", df_col)
@@ -259,8 +272,7 @@ elif choice == "Upload":
 		uploaded_gd.configure_default_column(editable=True, groupable=True)
 		gridoptions = uploaded_gd.build()
 		grid_table = AgGrid(uploaded_df, gridOptions=gridoptions,
-						update_mode=GridUpdateMode.SELECTION_CHANGED,
-						reload_data=True)
+						update_mode=GridUpdateMode.SELECTION_CHANGED)
 		load_sel_row = grid_table["selected_rows"]
 		sel_name = ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"]
 		src_name_input = st.selectbox("Lead Source Name", sel_name)
@@ -283,20 +295,20 @@ elif choice == "Upload":
 
 elif choice == "Scoring":
 	df_scoring = pd.DataFrame(view_all_data())
-	df_sel = st.radio("Scoring for:", ["All","Unapprove Suspect","Unapprove Prospect"])
+	df_sel = st.radio("Scoring for:", ["All","Unapprove Suspect"])
 	if df_sel == "Unapprove Suspect":
 		df_scoring = df_scoring[df_scoring.Suspect_Accepted_By.isnull()]
-	if df_sel == "Unapprove Prospect":
-		df_scoring = df_scoring[df_scoring.Suspect_Accepted_By.notnull()]
-		df_scoring = df_scoring[df_scoring.Prospect_Accepted_By.isnull()]
+	# if df_sel == "Unapprove Prospect":
+	# 	df_scoring = df_scoring[df_scoring.Suspect_Accepted_By.notnull()]
+	# 	df_scoring = df_scoring[df_scoring.Prospect_Accepted_By.isnull()]
 	st.sidebar.subheader("Scoring Model")
-	conditions = ["Revenue", "Physical Channel", "Competitors", "Contact Person Designation"]
+	conditions = ["Revenue", "Physical Channel", "Competitors", "Contact Person Information", "Contact Person Designation"]
 	options = st.multiselect("Rules to score",conditions)
 	if options:
 		df_scoring['Lead_Score'] = 0
 	if "Revenue" in options:
 		with st.sidebar.expander("Revenue Rules"):
-			average_revenue = st.number_input("Minimum Revenue required to achieve higher score", value = 10000, max_value=None,min_value=0)
+			average_revenue = st.number_input("Minimum Revenue required to achieve maximum score", value = 10000, max_value=None,min_value=0)
 			max_revenue = st.number_input("max score",max_value=100,min_value=0, value=5, key="max score for revenue")
 			min_revenue = st.number_input("min score",max_value=100,min_value=0, value=1, key="min score for revenue")
 			weight_revenue = st.slider("Choose the weight for revenue scoring",max_value=1.0,value=1.0)
@@ -311,20 +323,28 @@ elif choice == "Scoring":
 
 	if "Competitors" in options:
 		with st.sidebar.expander("Competitors Rules"):
-			cmp_sel = ["FedEx","J&T Express", "Lalamove", "Ninjavan", "GDEX", "Skynet", "PosLaju", "ABX Express", "EasyParcel", "Pgeon", "CityLink"]
-			cmp_list = st.multiselect("Competitors to achieve higher score",cmp_sel)
-			max_cmp = st.number_input("max score",max_value=100,min_value=0, value=5, key="max score for competitor")
-			min_cmp = st.number_input("min score",max_value=100,min_value=0, value=1, key="min score for competitor")
+			cmp_sel = ["FedEx","J&T", "Lalamove", "Ninjavan", "GDEX", "Skynet", "PosLaju", "ABX", "EasyParcel", "Pgeon", "CityLink"]
+			cmp_list = st.multiselect("Direct Competitors Selection",cmp_sel)
+			max_cmp = st.number_input("Score if direct competitor",max_value=100,min_value=0, value=5, key="max score for competitor")
+			min_cmp = st.number_input("Score if not direct competitor",max_value=100,min_value=0, value=1, key="min score for competitor")
 			weight_cmp = st.slider("Choose the weight for competitors scoring",max_value=1.0,value=1.0)			
 		sc.competitors(df_scoring,weight_cmp,cmp_list,max_cmp,min_cmp)
 
+	if "Contact Person Information" in options:
+		with st.sidebar.expander("Contact Person Information"):
+			score_name = st.number_input("Score for Name Available", max_value=100, value=10)
+			score_phone = st.number_input("Score for Phone No. Available", max_value=100, value=10)
+			score_email = st.number_input("Score for Email Available", max_value=100, value=10)
+			weight_cp = st.slider("Choose the weight for contact person information scoring",max_value=1.0,value=1.0)
+		sc.contact_available(df_scoring,weight_cp,score_name,score_phone,score_email)
+
 	if "Contact Person Designation" in options:
 		with st.sidebar.expander("Contact Person Designation"):
-			lv1 = st.number_input("score for Director & above", max_value=100, value=10)
-			lv2 = st.number_input("score for Mid-level manager", max_value=100, value=8)
-			lv3 = st.number_input("score for Senior", max_value=100, value=8)
-			lv4 = st.number_input("score for Entry Level", max_value=100, value=8)
-			weight_dsig = st.slider("Choose the weight for competitors scoring",max_value=1.0,value=1.0)
+			lv1 = st.number_input("Score for Director & above", max_value=100, value=10)
+			lv2 = st.number_input("Score for Manager Level", max_value=100, value=5)
+			lv3 = st.number_input("Score for Individual Contributors", max_value=100, value=3)
+			lv4 = st.number_input("Score for Entry Level", max_value=100, value=2)
+			weight_dsig = st.slider("Choose the weight for designation scoring",max_value=1.0,value=1.0)
 		sc.designation(df_scoring,weight_dsig,lv1,lv2,lv3,lv4)
 
 	if "tmp" in df_scoring:
@@ -343,56 +363,57 @@ elif choice == "Scoring":
 		st.success("New Scoring Model have been updated")
 				
 elif choice == "Convert":
-	tab1,tab2 = st.tabs(["Suspect Approve", "Prospect Approve"])
-	with tab1:
-		df_convert_sus = pd.DataFrame(view_all_data())
-		df_convert_sus = df_convert_sus[df_convert_sus.Suspect_Accepted_By.isnull()]
-		df_convert_sus = df_convert_sus[['Unique_Lead_Assignment_Number', 'Customer_name','Lead_Score']]
-		gd_sus = GridOptionsBuilder.from_dataframe(df_convert_sus)
-		gd_sus.configure_selection(selection_mode='multiple',
-										use_checkbox=True)
-		gd_sus.configure_pagination(enabled=True)
-		gd_sus.configure_grid_options(enableCellTextSelection=True)
-		gd_sus.configure_grid_options(ensureDomOrder=True)
-		gd_sus.configure_default_column(groupable=True)
-		gridoptions = gd_sus.build()
-		table_sus = AgGrid(df_convert_sus, gridOptions=gridoptions,
-						update_mode=GridUpdateMode.SELECTION_CHANGED)
-		sel_sus = table_sus["selected_rows"]
-		sus_input = st.text_input("Approved by:", key="suspect input")
-		submit_sus = st.button("Approve", key="suspect submit")
-		if submit_sus and sel_sus:
-			if sus_input == "":
-				st.error("Please fill out the name for approve.")
-			else:
-				for i in sel_sus:
-					sus_id = i["Unique_Lead_Assignment_Number"]
-					update_suspect_approve(sus_id, sus_input)
-				st.success("Selected receords have been Approved")
-				st.experimental_rerun()
-
-	with tab2:
-		df_convert_pro = pd.DataFrame(view_all_data())
-		df_convert_pro = df_convert_pro[df_convert_pro.Suspect_Accepted_By.notnull()]
-		df_convert_pro = df_convert_pro[df_convert_pro.Prospect_Accepted_By.isnull()]
-		df_convert_pro = df_convert_pro[['Unique_Lead_Assignment_Number', 'Customer_name','Lead_Score']]
-		gd_pro = GridOptionsBuilder.from_dataframe(df_convert_pro)
-		gd_pro.configure_selection(selection_mode='multiple',
-										use_checkbox=True)
-		gd_pro.configure_pagination(enabled=True)
-		gd_pro.configure_default_column(editable=True, groupable=True)
-		gridoptions = gd_pro.build()
-		table_pro = AgGrid(df_convert_pro, gridOptions=gridoptions,
-						update_mode=GridUpdateMode.SELECTION_CHANGED)
-		sel_pro = table_pro["selected_rows"]
-		pro_input = st.text_input("Approved by:", key="prospect input")
-		submit_pro = st.button("Approve", key="prospect submit")
-		if submit_pro and sel_pro:
-			if pro_input == "":
-				st.error("Please fill out the name for approve.")
-			else:
-				for i in sel_pro:
-					pro_id = i["Unique_Lead_Assignment_Number"]
-					update_prospect_approve(pro_id, pro_input)
-				st.success("Selected receords have been Approved")
-				st.experimental_rerun()
+	# tab1,tab2 = st.tabs(["Suspect Approve", "Prospect Approve"])
+	# with tab1:
+	st.header('✅Suspect Approve:')
+	df_convert_sus = pd.DataFrame(view_all_data())
+	df_convert_sus = df_convert_sus[df_convert_sus.Suspect_Accepted_By.isnull()]
+	df_convert_sus = df_convert_sus[['Unique_Lead_Assignment_Number', 'Customer_name','Lead_Score']]
+	gd_sus = GridOptionsBuilder.from_dataframe(df_convert_sus)
+	gd_sus.configure_selection(selection_mode='multiple',
+									use_checkbox=True)
+	gd_sus.configure_pagination(enabled=True)
+	gd_sus.configure_grid_options(enableCellTextSelection=True)
+	gd_sus.configure_grid_options(ensureDomOrder=True)
+	gd_sus.configure_default_column(groupable=True)
+	gridoptions = gd_sus.build()
+	table_sus = AgGrid(df_convert_sus, gridOptions=gridoptions,
+					update_mode=GridUpdateMode.SELECTION_CHANGED)
+	sel_sus = table_sus["selected_rows"]
+	sus_input = st.text_input("Approved by:", key="suspect input")
+	submit_sus = st.button("Approve", key="suspect submit")
+	if submit_sus and sel_sus:
+		if sus_input == "":
+			st.error("Please fill out the name for approve.")
+		else:
+			for i in sel_sus:
+				sus_id = i["Unique_Lead_Assignment_Number"]
+				update_suspect_approve(sus_id, sus_input)
+			st.success("Selected receords have been Approved")
+			st.experimental_rerun()
+	# not required to build this function
+	# with tab2:
+	# 	df_convert_pro = pd.DataFrame(view_all_data())
+	# 	df_convert_pro = df_convert_pro[df_convert_pro.Suspect_Accepted_By.notnull()]
+	# 	df_convert_pro = df_convert_pro[df_convert_pro.Prospect_Accepted_By.isnull()]
+	# 	df_convert_pro = df_convert_pro[['Unique_Lead_Assignment_Number', 'Customer_name','Lead_Score']]
+	# 	gd_pro = GridOptionsBuilder.from_dataframe(df_convert_pro)
+	# 	gd_pro.configure_selection(selection_mode='multiple',
+	# 									use_checkbox=True)
+	# 	gd_pro.configure_pagination(enabled=True)
+	# 	gd_pro.configure_default_column(editable=True, groupable=True)
+	# 	gridoptions = gd_pro.build()
+	# 	table_pro = AgGrid(df_convert_pro, gridOptions=gridoptions,
+	# 					update_mode=GridUpdateMode.SELECTION_CHANGED)
+	# 	sel_pro = table_pro["selected_rows"]
+	# 	pro_input = st.text_input("Approved by:", key="prospect input")
+	# 	submit_pro = st.button("Approve", key="prospect submit")
+	# 	if submit_pro and sel_pro:
+	# 		if pro_input == "":
+	# 			st.error("Please fill out the name for approve.")
+	# 		else:
+	# 			for i in sel_pro:
+	# 				pro_id = i["Unique_Lead_Assignment_Number"]
+	# 				update_prospect_approve(pro_id, pro_input)
+	# 			st.success("Selected receords have been Approved")
+	# 			st.experimental_rerun()

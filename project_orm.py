@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 import pandas as pd
+import numpy as np
 from datetime import date 
 
 Base = declarative_base()
@@ -37,7 +38,7 @@ class UserInput(Base):
 	Physical_Channel = Column(String(3))
 	SSM_Number_Business_Registration_Number = Column(String(12))
 	Competitors = Column(String(20))
-	Total_Potential_Revenue_per_Month = Column(Float)
+	Total_Potential_Revenue_per_Month = Column(Integer)
 	Industry = Column(String(20))
 	Suspect_Accepted_By = Column(String(50))
 	Suspect_Accepted_At = Column(Date)
@@ -94,7 +95,6 @@ def add_all_data(load_sel_row,src_name,src_extra,sus_date,sus_name,
 					load_cust_name,load_addr1,load_addr2,load_city,load_state,load_postcode,load_main_phone,load_cp_name,
 					load_cp_email,load_cp_pos,load_cp_phone,load_website,load_phy_channel,load_biz_no,load_competitors,
 					load_revenue,load_industry):
-	# for i in range(len(load_sel_row)):
 	for i in load_sel_row:
 					new_id = uuid4().hex
 					new_cust_name = i[load_cust_name] if load_cust_name != "" else None
@@ -135,6 +135,16 @@ def view_all_customer():
 def get_customer_record(name):
 	data = pd.read_sql_query('SELECT * FROM client_info where Customer_name="{}"'.format(name), sess.bind)
 	return data
+
+def edit_single_data(id, column, value):
+	sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(column = value))
+	try:
+		sess.commit()
+	except:
+		sess.rollback()
+	finally:
+		sess.close()
 
 def edit_customer_data(id, src_name, src_detail, cust_name,
 				addr1, addr2, city, state, postcode, main_phone, cp_name, cp_email,
@@ -205,50 +215,3 @@ def delete_data(id):
 		sess.rollback()
 	finally:
 		sess.close()
-
-def create_indexlist(df):
-	count_row = df.shape[0]
-	index = list()
-	for i in range(count_row):
-		index.append(i)
-	return index
-
-def    cleanup_names(df, name):
-	if name != "":
-		df[name] = df[name].str.replace('[a-z]', '', regex=True)
-		df[name] = df[name].str.replace('[:-@]', '', regex=True)
-		df[name] = df[name].str.replace('[!-/]', '', regex=True)
-		df[name] = df[name].str.replace(' +', ' ', regex=True)
-		df[name] = df[name].str.strip()
-
-def    cleanup_revenue(df, name):
-	if name != "":
-		if df[name].dtype == object and isinstance(df.iloc[0][name], str):
-			df[name] = df[name].str.replace('[a-z]','', regex=True)
-			df[name] = df[name].str.replace('[A-Z]','', regex=True)
-			df[name] = df[name].str.replace('[:-@]','', regex=True)
-			df[name] = df[name].str.replace('[!-,]','', regex=True)
-			df[name] = df[name].str.replace('/','', regex=True)
-			df[name] = df[name].str.replace(' +',' ', regex=True)
-			df[name] = df[name].str.strip()
-			df[name] = df[name].astype(float)
-			df[name] = df[name].round(2)
-
-def    cleanup_phone(df, name):
-	if name != "" and df[name].dtype == object:
-		df[name] = df[name].str.replace('[a-z]', '', regex=True)
-		df[name] = df[name].str.replace('[A-Z]', '', regex=True)
-		df[name] = df[name].str.replace('[:-@]', '', regex=True)
-		df[name] = df[name].str.replace('[!-/]', '', regex=True)
-		df[name] = df[name].str.replace(' +', ' ', regex=True)
-		df[name] = df[name].str.strip()
-
-def		cleanup_postcode(df, name):
-	if name != "" and df[name].dtype == object:
-		df[name] = df[name].str.replace('[a-z]', '', regex=True)
-		df[name] = df[name].str.replace('[A-Z]', '', regex=True)
-		df[name] = df[name].str.replace('[:-@]', '', regex=True)
-		df[name] = df[name].str.replace('[!-/]', '', regex=True)
-		df[name] = df[name].str.replace(' +', ' ', regex=True)
-		df[name] = df[name].str.strip()
-		df[name] = df[name].astype(int)
