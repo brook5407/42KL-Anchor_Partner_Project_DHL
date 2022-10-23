@@ -4,9 +4,7 @@ from sqlalchemy import Column, String, Integer, Float, Date
 from sqlalchemy import insert, update, select, delete
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 import pandas as pd
-import numpy as np
 from datetime import date 
 
 Base = declarative_base()
@@ -177,9 +175,9 @@ def edit_customer_data(id, src_name, src_detail, cust_name,
 	finally:
 		sess.close()
 
-def update_scoring(id, score):
+def update_scoring(id, score, type):
 	sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
-				values(Lead_Score = score))
+				values(Lead_Score = score, Source_Type = type))
 	try:
 		sess.commit()
 	except:

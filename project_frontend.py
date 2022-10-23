@@ -302,7 +302,7 @@ elif choice == "Scoring":
 	# 	df_scoring = df_scoring[df_scoring.Suspect_Accepted_By.notnull()]
 	# 	df_scoring = df_scoring[df_scoring.Prospect_Accepted_By.isnull()]
 	st.sidebar.subheader("Scoring Model")
-	conditions = ["Revenue", "Physical Channel", "Competitors", "Contact Person Information", "Contact Person Designation"]
+	conditions = ["Revenue", "Physical Channel", "Lead Source", "Competitors", "Contact Person Information", "Contact Person Designation"]
 	options = st.multiselect("Rules to score",conditions)
 	if options:
 		df_scoring['Lead_Score'] = 0
@@ -330,6 +330,14 @@ elif choice == "Scoring":
 			weight_cmp = st.slider("Choose the weight for competitors scoring",max_value=1.0,value=1.0)			
 		sc.competitors(df_scoring,weight_cmp,cmp_list,max_cmp,min_cmp)
 
+	if "Lead Source" in options:
+		with st.sidebar.expander("Lead Source Rules"):
+			src_sel = ["Current DB", "E-commence Platform", "Exhibition", "Social media", "Blogs", "Website", "Referral", "Other"]
+			src_list = st.multiselect("Lead Source Selection",src_sel)
+			score_src = st.number_input("Score if favourable lead source",max_value=100,min_value=0, value=20, key="max score for competitor")
+			weight_src = st.slider("Choose the weight for lead source scoring",max_value=1.0,value=1.0)			
+		sc.lead_source(df_scoring,weight_src,src_list,score_src)
+
 	if "Contact Person Information" in options:
 		with st.sidebar.expander("Contact Person Information"):
 			score_name = st.number_input("Score for Name Available", max_value=100, value=10)
@@ -352,12 +360,20 @@ elif choice == "Scoring":
 	df1 = df_scoring[['Unique_Lead_Assignment_Number','Customer_name','Lead_Score']]
 	# df1['Lead_Score'] = df1['Lead_Score'].astype(int)
 	st.dataframe(df1)
-	submit_scoring = st.button("Save", key="submit score")
 
+	type1, type2 = st.columns(2)
+	with type1:
+		warm_score = st.number_input("Minimum score to reach Warm type", value=50)
+		check_info = st.checkbox("Important information available")
+	with type2:
+		hot_score = st.number_input("Minimum score to reach Hot type", value=80)
+
+	submit_scoring = st.button("Save", key="submit score")
 	if submit_scoring:
+		sc.source_type(df_scoring,hot_score,warm_score,check_info)
 		for index, row in df_scoring.iterrows():
 			try:
-				update_scoring(row[0],row[-1])
+				update_scoring(row[0],row[-1],row[-2])
 			except Exception as e:
 					st.error(f"some error occurred : {e}")
 		st.success("New Scoring Model have been updated")
