@@ -309,10 +309,9 @@ elif choice == "Scoring":
 	if "Revenue" in options:
 		with st.sidebar.expander("Revenue Rules"):
 			average_revenue = st.number_input("Minimum Revenue required to achieve maximum score", value = 10000, max_value=None,min_value=0)
-			max_revenue = st.number_input("max score",max_value=100,min_value=0, value=5, key="max score for revenue")
-			min_revenue = st.number_input("min score",max_value=100,min_value=0, value=1, key="min score for revenue")
+			score_revenue = st.number_input("max score",max_value=100,min_value=0, value=10)
 			weight_revenue = st.slider("Choose the weight for revenue scoring",max_value=1.0,value=1.0)
-		sc.revenue(df_scoring,weight_revenue,max_revenue,min_revenue,average_revenue)
+		sc.revenue(df_scoring,weight_revenue,score_revenue,average_revenue)
 
 	if "Physical Channel" in options:
 		with st.sidebar.expander("Physical Channel Rules"):
@@ -325,8 +324,8 @@ elif choice == "Scoring":
 		with st.sidebar.expander("Competitors Rules"):
 			cmp_sel = ["FedEx","J&T", "Lalamove", "Ninjavan", "GDEX", "Skynet", "PosLaju", "ABX", "EasyParcel", "Pgeon", "CityLink"]
 			cmp_list = st.multiselect("Direct Competitors Selection",cmp_sel)
-			max_cmp = st.number_input("Score if direct competitor",max_value=100,min_value=0, value=5, key="max score for competitor")
-			min_cmp = st.number_input("Score if not direct competitor",max_value=100,min_value=0, value=1, key="min score for competitor")
+			max_cmp = st.number_input("Score if direct competitor",max_value=100,min_value=0, value=5)
+			min_cmp = st.number_input("Score if has competitor but not direct competitor",max_value=100,min_value=0, value=1)
 			weight_cmp = st.slider("Choose the weight for competitors scoring",max_value=1.0,value=1.0)			
 		sc.competitors(df_scoring,weight_cmp,cmp_list,max_cmp,min_cmp)
 
@@ -334,7 +333,7 @@ elif choice == "Scoring":
 		with st.sidebar.expander("Lead Source Rules"):
 			src_sel = ["Current DB", "E-commence Platform", "Exhibition", "Social media", "Blogs", "Website", "Referral", "Other"]
 			src_list = st.multiselect("Lead Source Selection",src_sel)
-			score_src = st.number_input("Score if favourable lead source",max_value=100,min_value=0, value=20, key="max score for competitor")
+			score_src = st.number_input("Score if favourable lead source",max_value=100,min_value=0, value=20, key="score for lead source")
 			weight_src = st.slider("Choose the weight for lead source scoring",max_value=1.0,value=1.0)			
 		sc.lead_source(df_scoring,weight_src,src_list,score_src)
 

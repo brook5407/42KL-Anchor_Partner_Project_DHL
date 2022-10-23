@@ -19,12 +19,11 @@ def	channel(df,weight,max,min):
 	df.loc[df[score].isnull(), [score]] = 0
 	df[score] = df[score] + (df['tmp'] * weight)
 
-def	revenue(df,weight,max,min,average):
+def	revenue(df,weight,max,average):
 	data = 'Total_Potential_Revenue_per_Month'
 	score = 'Lead_Score'
 	df.loc[df[data].isnull(), ['tmp']] = 0
-	df.loc[df[data] > average, ['tmp']] = max
-	df.loc[df[data] <= average, ['tmp']] = min
+	df.loc[df[data] >= average, ['tmp']] = max
 	df.loc[df[score].isnull(), [score]] = 0
 	df[score] = df[score] + (df['tmp'] * weight)
 
