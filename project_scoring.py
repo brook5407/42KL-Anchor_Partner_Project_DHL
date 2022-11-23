@@ -1,15 +1,3 @@
-'''
-We go with addictive scoring. We don't want one factor to hugely affect the rest of the others.
-scoring factors:
-1. Physical channel - B2B will more prefer DHL
-as it is more safe and more experienced in dealing with any problems happening
-2. Total Potential Revenue/Month - higher the better
-3. Contact person designation - higher the better
-4. Rural/urban address(?) - if we can. Urban better.
-5. Industry - the more fragile / high-cost / seasonal the better.
-6. Source type - the warmer the better.
-'''
-
 def	channel(df,weight,max,min):
 	data = 'Physical_Channel'
 	score = 'Lead_Score'
@@ -98,4 +86,3 @@ def source_type(df, hot, warm, check):
 		df.loc[df[score]>=warm, [type]] = 'Warm'
 		df.loc[df[score]>=hot, [type]] = 'Hot'
 	
-

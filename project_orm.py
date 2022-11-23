@@ -44,6 +44,8 @@ class UserInput(Base):
 	Prospect_Accepted_At = Column(Date)
 	Source_Type = Column(String(4))
 	Lead_Score = Column(Float)
+	Additional_Information_1 = Column(String)
+	Additional_Information_2 = Column(String)
 
 	def __repr__(self):
 		return super().__repr__()
@@ -51,7 +53,7 @@ class UserInput(Base):
 	def __init__(self, id, src_name, src_detail, sus_crt, sus_name, cust_name,
 				addr1, addr2, city, state, postcode, main_phone, cp_name, cp_email,
 				cp_pos, cp_phone, website, phy_channel, biz_no, competitors, revenue,
-				industry):
+				industry,add_info1,add_info2):
 		self.Unique_Lead_Assignment_Number = id
 		self.Lead_Source_Name = src_name
 		self.Lead_Source_Details_if_any = src_detail
@@ -74,6 +76,8 @@ class UserInput(Base):
 		self.Competitors = competitors
 		self.Total_Potential_Revenue_per_Month = revenue
 		self.Industry = industry
+		self.Additional_Information_1 = add_info1
+		self.Additional_Information_2 = add_info2
 
 if __name__ == "__main__":
 	engine = create_engine('sqlite:///dhl_db.sqlite3')
@@ -92,7 +96,7 @@ def add_data(entry):
 def add_all_data(load_sel_row,src_name,src_extra,sus_date,sus_name,
 					load_cust_name,load_addr1,load_addr2,load_city,load_state,load_postcode,load_main_phone,load_cp_name,
 					load_cp_email,load_cp_pos,load_cp_phone,load_website,load_phy_channel,load_biz_no,load_competitors,
-					load_revenue,load_industry):
+					load_revenue,load_industry,load_info1,load_info2):
 	for i in load_sel_row:
 					new_id = uuid4().hex
 					new_cust_name = i[load_cust_name] if load_cust_name != "" else None
@@ -112,10 +116,12 @@ def add_all_data(load_sel_row,src_name,src_extra,sus_date,sus_name,
 					new_competitors = i[load_competitors] if load_competitors != "" else None
 					new_revenue = i[load_revenue] if load_revenue != "" else None
 					new_industry = i[load_industry] if load_industry != "" else None
+					new_add_info1 = i[load_info1] if load_info1 != "" else None
+					new_add_info2 = i[load_info2] if load_info1 != "" else None
 					new_entry = UserInput(new_id,src_name,src_extra,sus_date,sus_name,new_cust_name,
 								new_addr1,new_addr2,new_city,new_state,new_postcode,new_main_phone,new_cp_name,
 								new_cp_email,new_cp_pos,new_cp_phone,new_website,new_phy_channel,new_biz_no,
-								new_competitors,new_revenue,new_industry)
+								new_competitors,new_revenue,new_industry,new_add_info1,new_add_info2)
 					add_data(new_entry)
 
 def view_all_data():

@@ -1,5 +1,5 @@
 import pandas as pd
-import recordlinkage
+import recordlinkage.compare
 from recordlinkage.index import Block, SortedNeighbourhood
 import nltk
 from nltk.tokenize import word_tokenize
@@ -7,13 +7,14 @@ from nltk.tokenize.treebank import TreebankWordDetokenizer
 from thefuzz import process
 from project_orm import *
 import re
-import requests
+
+# import requests
 nltk.download('punkt')
 
 
 def deduplicate_data(df):
 	df = df.where(pd.notnull(df), None)
-	name_stopword = ["SDN", "SB", "BHD", "LTD", 'LIMITED', "CO.", "COMPANY"]
+	name_stopword = ["SDN", "SB", "BHD", "LTD", 'LIMITED', "CO", "COMPANY"]
 	df ['cust_name_token'] = df['Customer_name'].apply(word_tokenize)
 	df['cust_name_clean'] = df['cust_name_token'].apply(lambda x: [word for word in x if word not in name_stopword])
 	df ['cust_name_clean'] = df['cust_name_clean'].apply(TreebankWordDetokenizer().detokenize) 
@@ -76,7 +77,7 @@ def cleanup_website(df,name):
 		df[name] = df[name].astype(str)
 		df[name] = df[name].str.strip()
 		df[name] = df[name].apply(lambda x: x if pattern.match(x) else None)
-		df[name] = df[name].apply(lambda x: x if x != None and requests.get('http://'+x, verify=False, allow_redirects=True, timeout=None).status_code == 200 else None)
+		# df[name] = df[name].apply(lambda x: x if x != None and requests.get('http://'+x, verify=False, allow_redirects=True, timeout=None).status_code == 200 else None)
 
 def	cleanup_revenue(df, name):
 	if name != "":
@@ -113,6 +114,12 @@ def	cleanup_competitor(df, name):
 		df[name] = df[name].str.replace('[!-/]', '', regex=True)
 		df[name] = df[name].str.replace(' +', ' ', regex=True)
 		df[name] = df[name].str.strip()
+
+def cleanup_additional_info(df, name):
+	if name != "":
+		df[name] = df[name].astype(str)
+		df[name] = df[name].str.strip()
+		df[name] = df[name].apply(lambda x: name + ': ' + x)
 
 def	remapping_competitors(df, name):
 	cleanup_competitor(df,name)
