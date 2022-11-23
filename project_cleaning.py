@@ -43,8 +43,8 @@ def deduplicate_data(df):
 		delete_data(dup_list[i][0])
 		for j in range(len(keep_list[i])):
 			if keep_list[i][j] is None or keep_list[i][j] == "":
-				column = keep.columns[j]
-				edit_single_data(keep_list[i][0],column,dup_list[i][j])
+				# column = keep.columns[j]
+				edit_single_data(keep_list[i][0], keep.columns[j], dup_list[i][j])
 
 def	cleanup_names(df, name):
 	if name != "":

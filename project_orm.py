@@ -140,9 +140,61 @@ def get_customer_record(name):
 	data = pd.read_sql_query('SELECT * FROM client_info where Customer_name="{}"'.format(name), sess.bind)
 	return data
 
-def edit_single_data(id, column, value):
-	sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
-				values(column = value))
+def edit_single_data(id, col, value):
+	if col == "Customer_name":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Customer_name = value))
+	elif col == "Address_Line_1":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Address_Line_1 = value))
+	elif col == "Address_Line_2":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Address_Line_2 = value))
+	elif col == "City":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(City = value))
+	elif col == "State":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(State = value))
+	elif col == "Post_Code":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Post_Code = value))
+	elif col == "Main_Phone":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Main_Phone = value))
+	elif col == "Contact_Person_Name":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Contact_Person_Name = value))
+	elif col == "Contact_Person_Email":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Contact_Person_Email = value))
+	elif col == "Contact_Person_Designation":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Contact_Person_Designation = value))
+	elif col == "Website":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Website = value))
+	elif col == "Physical_Channel":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Physical_Channel = value))
+	elif col == "SSM_Number_Business_Registration_Number":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(SSM_Number_Business_Registration_Number = value))
+	elif col == "Competitors":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Competitors = value))
+	elif col == "Total_Potential_Revenue_per_Month":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Total_Potential_Revenue_per_Month = value))				
+	elif col == "Industry":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Total_Potential_Revenue_per_Month = value))
+	elif col == "Additional_Information_1":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Additional_Information_1 = value))
+	elif col == "Additional_Information_2":
+		sess.execute(update(UserInput).where(UserInput.Unique_Lead_Assignment_Number == id).
+				values(Additional_Information_2 = value))
 	try:
 		sess.commit()
 	except:
