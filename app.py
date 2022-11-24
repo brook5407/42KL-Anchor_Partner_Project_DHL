@@ -159,6 +159,10 @@ if choice == "Dashboard":
 		m1,m2,m3 = st.columns(3)
 		m1.metric("Total Suspects", total_record)
 		m2.metric("Total Converted",count_converted,delta = str(percent_converted) + '%', delta_color="off")
+		m3_data = lead_df["Lead_Source_Name"].value_counts().reset_index()
+		m3_data.columns = ["Lead Source Name", "Count"]
+		m3_chart = px.pie(m3_data, title="Percentage of record successful Converted", values="Count", names="Lead Source Name", hole=.3)
+		st.write(m3_chart)
 		st.dataframe(lead_df.style.format({'Total_Potential_Revenue_per_Month':'{:.2f}', 'Lead_Score':'{:.2f}'}))
 
 elif choice == "Query":
