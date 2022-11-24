@@ -143,11 +143,10 @@ if choice == "Dashboard":
 										cp_phone,website,phy_channel,biz_no,competitors,revenue,industry,
 										None,None)
 						add_data(entry)
+						modal.close()
 						st.success("New Lead ID {} added to database".format(id))
-						st.experimental_rerun()
 					except Exception as e:
 						st.error(f"some error occurred : {e}")
-					modal.close()
 
 	with suspect_visual:
 		sel_date1, sel_date2 = st.columns(2)
@@ -283,11 +282,10 @@ elif choice == "Query":
 	if delete and sel_row:
 		try:
 			delete_data(id)
+			modal.close()
 			st.success("New Lead ID {} has been deleted".format(id))
-			st.experimental_rerun()
 		except Exception as e:
 				st.error(f"some error occurred : {e}")
-		modal.close()
 
 elif choice == "Upload":
 	st.subheader("Upload Dataset")
@@ -340,7 +338,7 @@ elif choice == "Upload":
 		grid_table = AgGrid(uploaded_df, gridOptions=gridoptions,
 						update_mode=GridUpdateMode.SELECTION_CHANGED)
 		load_sel_row = grid_table["selected_rows"]
-		sel_name = ["Current DB", "Exhibition", "Social media", "blogs", "Website", "Referral", "Other"]
+		sel_name = ["Current DB", "Exhibition", "E-commence Platform","Social media", "blogs", "Website", "Referral", "Other"]
 		src_name_input = st.selectbox("Lead Source Name", sel_name)
 		src_extra = st.text_input("Lead Source if any") if src_name_input == "Other" else None
 		extra1,extra2 = st.columns(2)
@@ -471,7 +469,6 @@ elif choice == "Convert":
 				sus_id = i["Unique_Lead_Assignment_Number"]
 				update_suspect_approve(sus_id, sus_input)
 			st.success("Selected receords have been Approved")
-			st.experimental_rerun()
 	# not required to build this function
 	# with tab2:
 	# 	df_convert_pro = pd.DataFrame(view_all_data())

@@ -43,8 +43,8 @@ def deduplicate_data(df):
 		delete_data(dup_list[i][0])
 		for j in range(len(keep_list[i])):
 			if keep_list[i][j] is None or keep_list[i][j] == "":
-				# column = keep.columns[j]
-				edit_single_data(keep_list[i][0], keep.columns[j], dup_list[i][j])
+				column = keep.columns[j]
+				edit_single_data(keep_list[i][0], column, dup_list[i][j])
 
 def	cleanup_names(df, name):
 	if name != "":
@@ -97,6 +97,7 @@ def cleanup_postcode(df,name):
 		df[name] = df[name].str.strip()
 		df[name] = df[name].str.findall('[0-9]+')
 		df[name] = df[name].str.join("")
+		df[name] = df[name].str[:5]
 		df[name] = df[name].fillna("")
 
 def	cleanup_phone(df, name):
@@ -134,7 +135,7 @@ def	remapping_competitors(df, name):
 def	remapping_state(df,name):
 	cleanup_state(df,name)
 	if name != "":
-		all_state = ["JOHOR", "KEDAH", "KELANTAN", "KUALA LUMPUR", "LABUAN", "MALAKA","NEGERI SEMBILAN", "PAHANG", "PENANG",
+		all_state = ["NONE", "JOHOR", "KEDAH", "KELANTAN", "KUALA LUMPUR", "LABUAN", "MALAKA","NEGERI SEMBILAN", "PAHANG", "PENANG",
 				"PERAK","PERLIS","PUTRAJAYA","SABAH", "SARAWAK", "SELANGOR", "TERENGGANU"]
 		for state in all_state:
 			matches = process.extract(state, df[name], limit=16)
