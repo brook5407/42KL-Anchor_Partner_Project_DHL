@@ -21,7 +21,9 @@
 	<span> · </span>
 	<a href="#-feature">Feature</a>
 	<span> · </span>
-	
+	<a href="#-install">Install</a>
+	<span> · </span>
+	<a href="#-architecture">Architecture</a>
 </h3>
 
 ---
@@ -89,17 +91,18 @@ DHL Express aspires to build a clean B2B database of 400,000 to 500,000 customer
 
 ![Convert function](https://user-images.githubusercontent.com/100013115/205226870-f70d345e-adf1-4cf2-bddc-20164fc14da9.jpg)
 
-## ⏳ Run
+## ⏳ install
 
-**Environment Setting**
-Install pip (if its not installed) `sudo apt-get install python3-pip`
+1. Install pip (if its not installed) `sudo apt-get install python3-pip`
+2. Install virtualenv `sudo pip3 install virtualenv`
+3. Create a virtualenv `virtualenv dhl_env`
+4. Activate your virtualenv `source dhl_env/bin/activate`
+5. Install the libraries from the requirements file: `pip install -r requirements.txt`
+6. run the web apps `streamlit run app.py`
 
-Install virtualenv `sudo pip3 install virtualenv`
+## 🧱 Architecture
 
-Create a virtualenv `virtualenv dhl_env`
+- Framework: Streamlit
+- Database: Sqlite
+- Language: Python
 
-Activate your virtualenv source myenv_name/bin/activate
-
-Check pre-installed libarries into your new env pip list
-
-install important libraries
