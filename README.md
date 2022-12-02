@@ -17,7 +17,7 @@
 <h3 align="center">
 	<a href="#%EF%B8%8F-About">About</a>
 	<span> · </span>
-	<a href="#-project-context">Context</a>
+	<a href="#-project">Context</a>
 	<span> · </span>
 	<a href="#-testing">Testing</a>
 </h3>
