@@ -100,6 +100,8 @@ DHL Express aspires to build a clean B2B database of 400,000 to 500,000 customer
 5. Install the libraries from the requirements file: `pip install -r requirements.txt`
 6. run the web apps `streamlit run app.py`
 
+Test run using streamlit cloud: https://brook5407-anchor-partner-project---dhl-app-73qbr6.streamlit.app/
+
 ## 🧱 Architecture
 
 - Framework: Streamlit
