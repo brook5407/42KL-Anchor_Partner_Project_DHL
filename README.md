@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-	<b><i>Because Swap_push isn’t as natural</i></b><br>
+	<b><i>Industry Project Module</i></b><br>
 </p>
 
 <p align="center">
